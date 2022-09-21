@@ -7,8 +7,8 @@ import java.util.*;
 @Service
 public class Finder {
 
-    public Set<String> getCompaniesIds(char[] pattern, char[] text){
-        Set<String> companiesIds = new LinkedHashSet<>();
+    public Set<Integer> getCompaniesIds(char[] pattern, char[] text){
+        Set<Integer> companiesIds = new HashSet<>();
         List<Integer> indexes = getStartIndexes(pattern, text);
 
         for (Integer index : indexes){
@@ -25,11 +25,11 @@ public class Finder {
                     }
 
                     if (text[i-1] != '\n' && (text[i-1] < 48 || text[i-1] > 57)){
-                        idToBuild = new StringBuilder();
+                        idToBuild.setLength(0);
                         possibleId = false;
                     }
                     else if (text[i-1] == '\n'){
-                        companiesIds.add(idToBuild.reverse().toString());
+                        companiesIds.add(Integer.parseInt(idToBuild.reverse().toString()));
                         break;
                     }
                 }
