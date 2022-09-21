@@ -1,29 +1,26 @@
 package com.reprisk.companiesnews;
 
-import com.reprisk.companiesnews.finder.BoyerMooreHorspoolFinder;
-import com.reprisk.companiesnews.finder.KnuthMorrisPrattFinder;
+import com.reprisk.companiesnews.finder.ArticleParser;
+import com.reprisk.companiesnews.finder.Finder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.util.StringUtils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Scanner;
+import java.util.Set;
 
 @SpringBootApplication
 public class CompaniesNewsApplication implements CommandLineRunner {
 
     @Autowired
-    private BoyerMooreHorspoolFinder bmhFinder;
+    private Finder finder;
 
     @Autowired
-    private KnuthMorrisPrattFinder kmpFinder;
+    private ArticleParser parser;
 
     public static void main(String[] args) {
         SpringApplication.run(CompaniesNewsApplication.class, args);
@@ -31,43 +28,33 @@ public class CompaniesNewsApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws IOException {
-//        Scanner scanner = new Scanner(new File("C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\asd.txt"));
-//        //Scanner scanner = new Scanner(new File("C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\reprisk\\160408_company_list.csv"));
-//        StringBuilder fileString = new StringBuilder();
-//
-//        fileString.append(scanner.nextLine());
-//        while (scanner.hasNextLine()) {
-//            fileString.append(scanner.nextLine());
-//        }
-//
-//        char[] fileCharArray = new char[fileString.length()];
-//        fileString.getChars(0, fileString.length(), fileCharArray, 0);
-//
-//        System.out.println("Dim string builder: " + fileString.length());
-//        System.out.println("Dim char array: " + fileCharArray.length);
-//        System.out.println("boyer: " + bmhFinder.search("suca".toCharArray(), fileCharArray));
-//        System.out.println("knuth: " + kmpFinder.search("suca".toCharArray(), fileCharArray));
-//
-//        for (char c : fileCharArray){
-//            System.out.print(c);
-//        }
-
-
-        //long one = System.nanoTime();
-        Path filePath = Path.of("C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\asd.txt");
-        //Path filePath = Path.of("C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\reprisk\\160408_company_list.csv");
+        //Path filePath = Path.of("C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\asd.txt");
+        Path filePath = Path.of("C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\reprisk\\160408_company_list.csv");
         String content = Files.readString(filePath);
+
+        Path filePath2 = Path.of("C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\reprisk\\data\\000D-2695-EAE6-7998.xml");
+        String content2 = Files.readString(filePath2);
+
         char[] charArray = content.toCharArray();
         //System.out.println("Dim string: " + content.length());
         //System.out.println(content);
         //System.out.println("Occorrenze: " + StringUtils.countOccurrencesOf(content, "Uber"));
+        //System.out.println("Dim string: " + content.length());
+        //System.out.println("Dim char array: " + charArray.length);
 
-        System.out.println("Dim string: " + content.length());
-        System.out.println("Dim char array: " + charArray.length);
         long one = System.nanoTime();
-        List<Integer> startIndexes = bmhFinder.getStartIndexes("Uber ".toCharArray(), charArray);
-        System.out.println("boyer: " + startIndexes);
-        System.out.println("knuth: " + kmpFinder.search("suca".toCharArray(), charArray));
+        Set<String> potentialCompanies = parser.getPotentialCompanies(content2);
+
+        for (String potentialCompany : potentialCompanies){
+            finder.getCompaniesIds(potentialCompany.toCharArray(), charArray);
+        }
+
+        //Set<String> startIndexes = finder.getCompaniesIds("Coca-Cola".toCharArray(), charArray);
+        //System.out.println("boyer: " + startIndexes);
+        //System.out.println("counts: " + startIndexes.size());
+
+
+        //System.out.println("knuth: " + kmpFinder.search("suca".toCharArray(), charArray));
 
         long two = System.nanoTime();
         System.out.println("Tempo impiegato: " + (two - one));

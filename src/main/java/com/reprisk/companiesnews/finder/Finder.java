@@ -2,11 +2,42 @@ package com.reprisk.companiesnews.finder;
 
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
-public class BoyerMooreHorspoolFinder {
+public class Finder {
+
+    public Set<String> getCompaniesIds(char[] pattern, char[] text){
+        Set<String> companiesIds = new LinkedHashSet<>();
+        List<Integer> indexes = getStartIndexes(pattern, text);
+
+        for (Integer index : indexes){
+            StringBuilder idToBuild = new StringBuilder();
+            boolean possibleId = false;
+            for (int i = index-1; i>0; i--){
+                if (text[i] == ';'){
+                    possibleId=true;
+                    i--;
+                }
+                if (possibleId){
+                    if (text[i] >= 48 && text[i] <= 57){
+                        idToBuild.append(text[i]);
+                    }
+
+                    if (text[i-1] != '\n' && (text[i-1] < 48 || text[i-1] > 57)){
+                        idToBuild = new StringBuilder();
+                        possibleId = false;
+                    }
+                    else if (text[i-1] == '\n'){
+                        companiesIds.add(idToBuild.reverse().toString());
+                        break;
+                    }
+                }
+            }
+        }
+
+        return companiesIds;
+    }
 
     public List<Integer> getStartIndexes(char[] pattern, char[] text){
         List<Integer> indexes = new ArrayList<>();
