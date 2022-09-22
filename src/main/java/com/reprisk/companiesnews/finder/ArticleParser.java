@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
-public class ArticleTokenizer {
+public class ArticleParser {
 
     public Set<String> getPotentialCompanies(String article){
         Set<String> potentialCompanies = new HashSet<>();

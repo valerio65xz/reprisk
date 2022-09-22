@@ -1,14 +1,18 @@
 package com.reprisk.companiesnews;
 
-import com.reprisk.companiesnews.finder.ArticleTokenizer;
+import com.reprisk.companiesnews.finder.ArticleParser;
 import com.reprisk.companiesnews.finder.Finder;
+import com.reprisk.companiesnews.finder.Tokenizer;
+import com.reprisk.companiesnews.model.Company;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -20,7 +24,10 @@ public class CompaniesNewsApplication implements CommandLineRunner {
     private Finder finder;
 
     @Autowired
-    private ArticleTokenizer parser;
+    private ArticleParser parser;
+
+    @Autowired
+    private Tokenizer tokenizer;
 
     private final String pathOfArticles = "C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\reprisk\\data";
     private final String pathOfDataset = "C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\reprisk\\160408_company_list.csv";
@@ -38,6 +45,18 @@ public class CompaniesNewsApplication implements CommandLineRunner {
         String content = Files.readString(filePath);
         char[] companiesDataset = content.toCharArray();
         Set<Integer> companies = new HashSet<>();
+
+        Set<Company> companies1 = tokenizer.getCompaniesFromDataset(pathOfDataset);
+        //System.out.println(companies1);
+
+        PrintWriter printWriter = new PrintWriter( new FileWriter("C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\reprisk\\asd.csv"));
+        for (Company company : companies1){
+            printWriter.print(company.getId() + ";" + company.getName() + "\n");
+        }
+
+        printWriter.close();
+
+        System.exit(0);
 
         //int i=0;
         for (File file : files) {
