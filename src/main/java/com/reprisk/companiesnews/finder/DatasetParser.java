@@ -1,34 +1,33 @@
 package com.reprisk.companiesnews.finder;
 
-import com.reprisk.companiesnews.model.Company;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.*;
 
 @Service
-public class Tokenizer {
+public class DatasetParser {
 
     private final Set<String> stopWords = new HashSet<>();
 
-    public Tokenizer(){
-        stopWords.add("limited");
-        stopWords.add("l.t.d.");
-        stopWords.add("l.t.d");
-        stopWords.add("ltd.");
-        stopWords.add("ltd");
+    public DatasetParser(){
+        //stopWords.add("limited");
+        //stopWords.add("l.t.d.");
+        //stopWords.add("l.t.d");
+        //stopWords.add("ltd.");
+        //stopWords.add("ltd");
         stopWords.add("n.v.");
         stopWords.add("n.v");
         stopWords.add("nv.");
         stopWords.add("nv");
-        stopWords.add("i.n.c.");
-        stopWords.add("i.n.c");
-        stopWords.add("inc.");
-        stopWords.add("inc");
-        stopWords.add("c.o.r.p.");
-        stopWords.add("c.o.r.p");
-        stopWords.add("corp.");
-        stopWords.add("corp");
+        //stopWords.add("i.n.c.");
+        //stopWords.add("i.n.c");
+        //stopWords.add("inc.");
+        //stopWords.add("inc");
+        //stopWords.add("c.o.r.p.");
+        //stopWords.add("c.o.r.p");
+        //stopWords.add("corp.");
+        //stopWords.add("corp");
         stopWords.add("s.a.");
         stopWords.add("s.a");
         stopWords.add("sa.");
@@ -166,32 +165,15 @@ public class Tokenizer {
         stopWords.add("s.a.s");
         stopWords.add("sas.");
         stopWords.add("sas");
+        stopWords.add("sicav");
+        stopWords.add("s.a.b.");
+        stopWords.add("s.a.b");
+        stopWords.add("sab.");
+        stopWords.add("sab");
     }
 
-    public Set<String> findStopWords(String text){
-        Set<String> stopWords = new HashSet<>();
-        Map<String, Integer> wordCounter = new HashMap<>();
-        StringTokenizer tokenizer = new StringTokenizer(text);
-
-        while (tokenizer.hasMoreTokens()){
-            String token = tokenizer.nextToken();
-            if (wordCounter.containsKey(token)){
-                int counter = wordCounter.get(token) + 1;
-                if (counter == 5){
-                    stopWords.add(token);
-                }
-                wordCounter.put(token, counter);
-            }
-            else{
-                wordCounter.put(token, 1);
-            }
-        }
-
-        return stopWords;
-    }
-
-    public Set<Company> getCompaniesFromDataset(String filePath) throws IOException {
-        Set<Company> cleanedCompanies = new LinkedHashSet<>();
+    public Map<String, Integer> getCompaniesFromDataset(String filePath) throws IOException {
+        Map<String, Integer> cleanedCompanies = new HashMap<>();
         Scanner scanner = new Scanner(new File(filePath));
 
         scanner.nextLine();
@@ -205,13 +187,14 @@ public class Tokenizer {
                 String companyCleaned = removeStopWords(company + " ");
                 String finalCompany = lastClean(companyCleaned.trim());
                 if (!finalCompany.isBlank()){
-                    cleanedCompanies.add(new Company(id, finalCompany));
+                    cleanedCompanies.put(finalCompany, id);
                 }
             }
         }
 
         return cleanedCompanies;
     }
+
 
     private List<String> getCompaniesInALine(String line){
         List<String> companiesInALine = new ArrayList<>();
@@ -285,14 +268,14 @@ public class Tokenizer {
         }
     }
 
-    private String removeStopWords(String toClean){
+    public String removeStopWords(String toClean){
         StringBuilder clean = new StringBuilder();
         int index = 0;
 
         while (index < toClean.length()) {
             int nextIndex = toClean.indexOf(" ", index);
             if (nextIndex == -1) {
-                nextIndex = toClean.length() - 1;
+                nextIndex = toClean.length();
             }
             String word = toClean.substring(index, nextIndex);
             if (!stopWords.contains(word.toLowerCase())) {
@@ -328,6 +311,7 @@ public class Tokenizer {
         line = line.replace("Refer to ", "");
         line = line.replace("SAB de CV", "");
         line = line.replace("SA de CV", "");
+        line = line.replace("de CV", "");
         return line;
     }
 
