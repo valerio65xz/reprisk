@@ -1,0 +1,42 @@
+{
+	"info": {
+		"_postman_id": "d1007274-dab4-4925-8ae7-d676c12e2797",
+		"name": "RepRisk",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3460591"
+	},
+	"item": [
+		{
+			"name": "Companies",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"pathOfArticles\": \"C:\\\\Users\\\\vale-\\\\Desktop\\\\reprisk\\\\data\",\r\n    \"pathOfDataset\": \"C:\\\\Users\\\\vale-\\\\Desktop\\\\reprisk\\\\160408_company_list.csv\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/companies/find",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"companies",
+						"find"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
