@@ -1,16 +1,16 @@
-package com.reprisk.companiesnews.finder;
+package com.reprisk.companiesnews.filter;
 
 import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
-public class DatasetParser {
+public class WordFilter {
 
     private final Set<String> stopWords = new HashSet<>();
 
-    public DatasetParser(){
+    public WordFilter(){
         //stopWords.add("limited");
         //stopWords.add("l.t.d.");
         //stopWords.add("l.t.d");
@@ -32,7 +32,6 @@ public class DatasetParser {
         stopWords.add("s.a");
         stopWords.add("sa.");
         stopWords.add("sa");
-        //stopWords.add("group");
         stopWords.add("p.l.c.");
         stopWords.add("p.l.c");
         stopWords.add("plc.");
@@ -172,103 +171,7 @@ public class DatasetParser {
         stopWords.add("sab");
     }
 
-    public Map<String, Integer> getCompaniesFromDataset(String filePath) throws IOException {
-        Map<String, Integer> cleanedCompanies = new HashMap<>();
-        Scanner scanner = new Scanner(new File(filePath));
-
-        scanner.nextLine();
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            Integer id = Integer.parseInt(line.substring(0, line.indexOf(';')));
-            line = line.substring(line.indexOf(';')+1);
-
-            List<String> companiesInALine = getCompaniesInALine(line);
-            for(String company : companiesInALine){
-                String companyCleaned = removeStopWords(company + " ");
-                String finalCompany = lastClean(companyCleaned.trim());
-                if (!finalCompany.isBlank()){
-                    cleanedCompanies.put(finalCompany, id);
-                }
-            }
-        }
-
-        return cleanedCompanies;
-    }
-
-
-    private List<String> getCompaniesInALine(String line){
-        List<String> companiesInALine = new ArrayList<>();
-
-        String lineWithoutQuotes = line.replace("\"", "");
-        StringBuilder builder = new StringBuilder(lineWithoutQuotes);
-
-        while (lineWithoutQuotes.contains("(") && lineWithoutQuotes.contains(")")){
-            int begin = lineWithoutQuotes.indexOf('(');
-            int end = lineWithoutQuotes.indexOf(')');
-
-            extractStrings(lineWithoutQuotes.substring(begin+1, end), companiesInALine);
-
-            builder.replace(begin, end+2, "");
-            lineWithoutQuotes = builder.toString();
-        }
-
-        extractStrings(lineWithoutQuotes, companiesInALine);
-
-        return companiesInALine;
-    }
-
-    private void extractStrings(String line, List<String> companiesInALine){
-        if (line.contains(",")){
-            int colon = line.lastIndexOf(',');
-            companiesInALine.add(line.substring(colon+1));
-            line = line.substring(0, colon);
-        }
-
-        while (line.contains(";") || line.contains(" or ")){
-            int semicolon = line.indexOf(';');
-            int or = line.indexOf(" or ");
-
-            if (semicolon != -1 && or != -1){
-                if (semicolon < or){
-                    companiesInALine.add(line.substring(0, semicolon));
-                    line = getStringAfterSemicolon(line, semicolon);
-                }
-                else{
-                    companiesInALine.add(line.substring(0, or));
-                    line = getStringAfterOr(line, or);
-                }
-            }
-            else if (semicolon != -1){
-                companiesInALine.add(line.substring(0, semicolon));
-                line = getStringAfterSemicolon(line, semicolon);
-            }
-            else {
-                companiesInALine.add(line.substring(0, or));
-                line = getStringAfterOr(line, or);
-            }
-        }
-        companiesInALine.add(line);
-    }
-
-    private String getStringAfterSemicolon(String string, int index){
-        if (index+2 <= string.length()){
-            return string.substring(index+2);
-        }
-        else{
-            return "";
-        }
-    }
-
-    private String getStringAfterOr(String string, int index){
-        if (index+4 <= string.length()){
-            return string.substring(index+4);
-        }
-        else{
-            return "";
-        }
-    }
-
-    public String removeStopWords(String toClean){
+    public String filter(String toClean){
         StringBuilder clean = new StringBuilder();
         int index = 0;
 
@@ -290,7 +193,7 @@ public class DatasetParser {
         return clean.toString();
     }
 
-    private String lastClean(String line){
+    public String filterComplexWords(String line){
         line = line.replace("formerly known as ", "");
         line = line.replace("Formerly known as ", "");
         line = line.replace("formerly known ", "");
@@ -309,6 +212,9 @@ public class DatasetParser {
         line = line.replace("Please refer to ", "");
         line = line.replace("refer to ", "");
         line = line.replace("Refer to ", "");
+        line = line.replace(" SAB de CV", "");
+        line = line.replace(" SA de CV", "");
+        line = line.replace(" de CV", "");
         line = line.replace("SAB de CV", "");
         line = line.replace("SA de CV", "");
         line = line.replace("de CV", "");

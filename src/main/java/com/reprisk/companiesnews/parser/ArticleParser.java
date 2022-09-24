@@ -1,4 +1,4 @@
-package com.reprisk.companiesnews.finder;
+package com.reprisk.companiesnews.parser;
 
 import org.springframework.stereotype.Service;
 
@@ -8,7 +8,7 @@ import java.util.*;
 public class ArticleParser {
 
     public Set<String> getPotentialCompanies(String article){
-        Set<String> potentialCompanies = new HashSet<>();
+        Set<String> potentialCompanies = new LinkedHashSet<>();
         StringTokenizer tokenizer = new StringTokenizer(article);
         StringBuilder company = new StringBuilder();
         boolean canStart = false;
@@ -90,7 +90,7 @@ public class ArticleParser {
     }
 
     private void restartToSearchCompany(Set<String> potentialCompanies, StringBuilder company){
-        if (company.toString().length() > 3){
+        if (company.toString().length() > 2){
             potentialCompanies.add(company.toString());
         }
 

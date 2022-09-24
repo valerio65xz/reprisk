@@ -1,12 +1,14 @@
 package com.reprisk.companiesnews.finder;
 
+import com.reprisk.companiesnews.debugger.Debugger;
+import com.reprisk.companiesnews.filter.WordFilter;
+import com.reprisk.companiesnews.parser.ArticleParser;
+import com.reprisk.companiesnews.parser.DatasetParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -21,12 +23,30 @@ public class Finder {
     private DatasetParser datasetParser;
 
     @Autowired
-    private DistanceFinder distanceFinder;
+    private WordFilter wordFilter;
 
-    public List<Integer> getCompaniesIds(String pathOfArticles, String pathOfDataset, SearchType searchType) throws IOException {
+    @Autowired
+    private Debugger debugger;
+
+    public List<Integer> getCompaniesIds(String pathOfArticles, String pathOfDataset) throws IOException {
+        Set<Integer> companies = new HashSet<>();
+
+        List<Path> articlesPaths = getArticlesPaths(pathOfArticles);
+        Map<String, Integer> companiesFromDataset = datasetParser.getCompaniesFromDataset(pathOfDataset);
+
+        //debugger.openResultsFile("C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\reprisk\\matchedResults.csv");
+        executeCompanyThreads(articlesPaths, companies, companiesFromDataset);
+        //debugger.closeResultsFile();
+
+        List<Integer> orderedCompanies = new ArrayList<>(companies);
+        orderedCompanies.removeAll(Collections.singleton(null));
+        Collections.sort(orderedCompanies);
+        return orderedCompanies;
+    }
+
+    List<Path> getArticlesPaths(String pathOfArticles){
         File[] files = new File(pathOfArticles).listFiles();
         List<Path> articlesPaths = new ArrayList<>();
-        Set<Integer> companies = new HashSet<>();
 
         assert files != null;
         for (File file : files) {
@@ -35,70 +55,32 @@ public class Finder {
             }
         }
 
-        Map<String, Integer> companiesFromDataset = datasetParser.getCompaniesFromDataset(pathOfDataset);
-        switch (searchType){
-            case HASH ->
-                    executeCompanyThreads(articlesPaths, companies, companiesFromDataset);
-            case DISTANCE -> {
-                char[] companiesDatasetArray = buildDatasetString(companiesFromDataset);
-                executeCompanyThreads(articlesPaths, companies, companiesDatasetArray);
-            }
-        }
-
-        List<Integer> orderedCompanies = new ArrayList<>(companies);
-        orderedCompanies.sort(Comparator.nullsLast(Comparator.naturalOrder()));
-        return orderedCompanies;
+        return articlesPaths;
     }
 
-    private void executeCompanyThreads(List<Path> articlesPaths, Set<Integer> companies, Map<String, Integer> companiesDataset){
+    void executeCompanyThreads(List<Path> articlesPaths, Set<Integer> companies, Map<String, Integer> companiesDataset){
         articlesPaths.parallelStream().forEach((articlePath) -> {
             String articleContent;
+
             try {
                 articleContent = Files.readString(articlePath);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Can't access file in location: " + articlePath);
             }
-            Set<String> potentialCompanies = articleParser.getPotentialCompanies(articleContent);
 
+            Set<String> potentialCompanies = articleParser.getPotentialCompanies(articleContent);
             for (String potentialCompany : potentialCompanies){
-                String potentialCompanyCleaned = datasetParser.removeStopWords(potentialCompany);
+                String potentialCompanyCleaned = wordFilter.filter(potentialCompany.trim());
                 if (companiesDataset.containsKey(potentialCompanyCleaned)){
+                    //debugger.writeResultsFile(debuggerGetArticleRelative(articlePath.toString()) + ": [" + companiesDataset.get(potentialCompanyCleaned) + "] " + potentialCompanyCleaned + " - " + debugger.originalDataset.get(companiesDataset.get(potentialCompanyCleaned)) + "\n");
                     companies.add(companiesDataset.get(potentialCompanyCleaned));
                 }
             }
         });
     }
 
-    private void executeCompanyThreads(List<Path> articlesPaths, Set<Integer> companies, char[] companiesDataset){
-        articlesPaths.parallelStream().forEach((articlePath) -> {
-            String articleContent;
-            try {
-                articleContent = Files.readString(articlePath);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            Set<String> potentialCompanies = articleParser.getPotentialCompanies(articleContent);
-
-            for (String potentialCompany : potentialCompanies){
-                String potentialCompanyCleaned = datasetParser.removeStopWords(potentialCompany.trim());
-                if (!potentialCompanyCleaned.isBlank()){
-                    Set<Integer> companiesFound = distanceFinder.getCompaniesIds(potentialCompanyCleaned.toCharArray(), companiesDataset);
-                    companies.addAll(companiesFound);
-                }
-            }
-        });
-    }
-
-    private char[] buildDatasetString(Map<String, Integer> companiesFromDataset) throws IOException {
-        //PrintWriter printWriter = new PrintWriter(new FileWriter("C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\reprisk\\asd.csv"));
-        StringBuilder stringBuilder = new StringBuilder();
-
-        for (Map.Entry<String, Integer> entry : companiesFromDataset.entrySet()) {
-            stringBuilder.append(entry.getValue()).append(";").append(entry.getKey()).append("\n");
-            //printWriter.print(entry.getValue() + ";" + entry.getKey() + "\n");
-        }
-        //printWriter.close();
-        return stringBuilder.toString().toCharArray();
+    private String debuggerGetArticleRelative(String articlePath){
+        return articlePath.substring(articlePath.lastIndexOf('\\') + 1);
     }
 
 }
