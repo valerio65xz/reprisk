@@ -1,6 +1,5 @@
 package com.reprisk.companiesnews.finder;
 
-import com.reprisk.companiesnews.debugger.Debugger;
 import com.reprisk.companiesnews.filter.WordFilter;
 import com.reprisk.companiesnews.parser.ArticleParser;
 import com.reprisk.companiesnews.parser.DatasetParser;
@@ -16,17 +15,18 @@ import java.util.*;
 @Service
 public class Finder {
 
-    @Autowired
-    private ArticleParser articleParser;
+    private final ArticleParser articleParser;
+
+    private final DatasetParser datasetParser;
+
+    private final WordFilter wordFilter;
 
     @Autowired
-    private DatasetParser datasetParser;
-
-    @Autowired
-    private WordFilter wordFilter;
-
-    @Autowired
-    private Debugger debugger;
+    public Finder(ArticleParser articleParser, DatasetParser datasetParser, WordFilter wordFilter) {
+        this.articleParser = articleParser;
+        this.datasetParser = datasetParser;
+        this.wordFilter = wordFilter;
+    }
 
     public List<Integer> getCompaniesIds(String pathOfArticles, String pathOfDataset) throws IOException {
         Set<Integer> companies = new HashSet<>();
@@ -34,9 +34,7 @@ public class Finder {
         List<Path> articlesPaths = getArticlesPaths(pathOfArticles);
         Map<String, Integer> companiesFromDataset = datasetParser.getCompaniesFromDataset(pathOfDataset);
 
-        //debugger.openResultsFile("C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\reprisk\\matchedResults.csv");
         executeCompanyThreads(articlesPaths, companies, companiesFromDataset);
-        //debugger.closeResultsFile();
 
         List<Integer> orderedCompanies = new ArrayList<>(companies);
         orderedCompanies.removeAll(Collections.singleton(null));
@@ -72,15 +70,10 @@ public class Finder {
             for (String potentialCompany : potentialCompanies){
                 String potentialCompanyCleaned = wordFilter.filter(potentialCompany.trim());
                 if (companiesDataset.containsKey(potentialCompanyCleaned)){
-                    //debugger.writeResultsFile(debuggerGetArticleRelative(articlePath.toString()) + ": [" + companiesDataset.get(potentialCompanyCleaned) + "] " + potentialCompanyCleaned + " - " + debugger.originalDataset.get(companiesDataset.get(potentialCompanyCleaned)) + "\n");
                     companies.add(companiesDataset.get(potentialCompanyCleaned));
                 }
             }
         });
-    }
-
-    private String debuggerGetArticleRelative(String articlePath){
-        return articlePath.substring(articlePath.lastIndexOf('\\') + 1);
     }
 
 }

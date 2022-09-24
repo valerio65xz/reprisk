@@ -14,8 +14,12 @@ import java.util.List;
 @RequestMapping("/companies")
 public class CompanyController {
 
+    private final Finder finder;
+
     @Autowired
-    private Finder finder;
+    public CompanyController(Finder finder) {
+        this.finder = finder;
+    }
 
     @GetMapping("find")
     private ResponseEntity<List<Integer>> getCompaniesByHashing(@RequestBody @Valid Paths paths) throws IOException {

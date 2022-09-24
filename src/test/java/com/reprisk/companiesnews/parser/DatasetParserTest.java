@@ -5,7 +5,6 @@ import com.reprisk.companiesnews.filter.WordFilter;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
 import java.util.Map;

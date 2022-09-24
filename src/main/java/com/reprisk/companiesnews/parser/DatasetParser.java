@@ -1,6 +1,5 @@
 package com.reprisk.companiesnews.parser;
 
-import com.reprisk.companiesnews.debugger.Debugger;
 import com.reprisk.companiesnews.filter.WordFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,17 +10,16 @@ import java.util.*;
 @Service
 public class DatasetParser {
 
-    @Autowired
-    private WordFilter wordFilter;
+    private final WordFilter wordFilter;
 
     @Autowired
-    private Debugger debugger;
+    public DatasetParser(WordFilter wordFilter) {
+        this.wordFilter = wordFilter;
+    }
 
     public Map<String, Integer> getCompaniesFromDataset(String filePath) throws IOException {
         Map<String, Integer> cleanedCompanies = new HashMap<>();
         Scanner scanner = new Scanner(new File(filePath));
-
-        //debugger.openDatasetFile("C:\\Users\\vale-\\OneDrive\\Old\\Desktop\\reprisk\\parsedDataset.csv");
 
         scanner.nextLine();
         while (scanner.hasNextLine()) {
@@ -29,20 +27,16 @@ public class DatasetParser {
             Integer id = Integer.parseInt(line.substring(0, line.indexOf(';')));
             line = line.substring(line.indexOf(';')+1);
 
-            //debugger.originalDataset.put(id, line);
-
             List<String> companiesInALine = getCompaniesInALine(line);
             for(String company : companiesInALine){
                 String companyCleaned = wordFilter.filter(company + " ");
                 String finalCompany = wordFilter.filterComplexWords(companyCleaned.trim());
                 if (!finalCompany.isBlank()){
                     cleanedCompanies.put(finalCompany, id);
-                    //debugger.writeDatasetFile("" + id + ";" + finalCompany + "\n");
                 }
             }
         }
 
-        //debugger.closeDatasetFile();
         return cleanedCompanies;
     }
 
